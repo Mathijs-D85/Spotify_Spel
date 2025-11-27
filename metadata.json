@@ -1,0 +1,5 @@
+{
+  "name": "SpotifySpel",
+  "description": "Een multiplayer muziekquiz waar spelers thema's en nummers raden.",
+  "requestFramePermissions": []
+}
