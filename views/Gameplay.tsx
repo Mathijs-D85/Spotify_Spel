@@ -42,24 +42,23 @@ export const Gameplay: React.FC<GameplayProps> = ({ round, roundNumber, totalRou
   }, [timeLeft]);
 
   const togglePlay = async (song: Song) => {
-    if (!deviceId && currentUser.accessToken !== 'mock_token') {
-      alert("Speler is nog niet klaar.");
-      return;
-    }
+    // Allow playing even if no deviceId (Remote Control Mode)
+    // But we need a token
+    if (!currentUser.accessToken) return;
+
+    const targetDeviceId = currentUser.accessToken === 'mock_token' ? 'mock' : deviceId;
 
     if (playingSongId === song.id) {
-      await pausePlayer(deviceId || 'mock', currentUser.accessToken!);
+      await pausePlayer(targetDeviceId, currentUser.accessToken);
       setPlayingSongId(null);
     } else {
-      await playTrack(deviceId || 'mock', song.uri || '', currentUser.accessToken!);
-      setPlayingSongId(song.id);
-
-      // Auto reveal mechanic removed to prevent spoilers
-      // if (!revealedSongs.includes(song.id)) {
-      //   setTimeout(() => {
-      //     setRevealedSongs(prev => [...prev, song.id]);
-      //   }, 3000);
-      // }
+      try {
+        await playTrack(targetDeviceId, song.uri || '', currentUser.accessToken);
+        setPlayingSongId(song.id);
+      } catch (e) {
+        console.error("Playback failed", e);
+        alert("Kon niet afspelen. Zorg dat Spotify open staat op je apparaat.");
+      }
     }
   };
 
@@ -88,7 +87,7 @@ export const Gameplay: React.FC<GameplayProps> = ({ round, roundNumber, totalRou
 
       {!deviceId && currentUser.accessToken !== 'mock_token' && (
         <div className="bg-yellow-600/20 text-yellow-500 text-xs p-2 text-center">
-          Verbinden met Spotify Player...
+          Geen web player. Open Spotify App om te luisteren.
         </div>
       )}
       {currentUser.accessToken === 'mock_token' && (
@@ -108,7 +107,7 @@ export const Gameplay: React.FC<GameplayProps> = ({ round, roundNumber, totalRou
               <div className="flex items-center p-3 gap-4">
                 <button
                   onClick={() => togglePlay(song)}
-                  disabled={!deviceId && currentUser.accessToken !== 'mock_token'}
+                  disabled={false}
                   className="w-12 h-12 rounded-full bg-spotify-green flex items-center justify-center flex-shrink-0 hover:scale-105 transition-transform disabled:opacity-50"
                 >
                   {isPlaying ? <Pause fill="black" size={20} className="text-black" /> : <Play fill="black" size={20} className="text-black ml-1" />}

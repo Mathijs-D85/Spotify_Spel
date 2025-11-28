@@ -166,14 +166,18 @@ export const searchTracks = async (query: string, accessToken: string): Promise<
   }));
 };
 
-export const playTrack = async (deviceId: string, spotifyUri: string, accessToken: string) => {
+export const playTrack = async (deviceId: string | null, spotifyUri: string, accessToken: string) => {
   if (accessToken === 'mock_token') {
     console.log("Mock Playing:", spotifyUri);
     return;
   }
 
-  // If we have a specific device ID (from Web Player), use it
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+  // Construct URL: if deviceId is present, target it. Otherwise, target active device.
+  const url = deviceId
+    ? `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`
+    : `https://api.spotify.com/v1/me/player/play`;
+
+  await fetch(url, {
     method: 'PUT',
     body: JSON.stringify({ uris: [spotifyUri] }),
     headers: {
@@ -183,12 +187,17 @@ export const playTrack = async (deviceId: string, spotifyUri: string, accessToke
   });
 };
 
-export const pausePlayer = async (deviceId: string, accessToken: string) => {
+export const pausePlayer = async (deviceId: string | null, accessToken: string) => {
   if (accessToken === 'mock_token') {
     console.log("Mock Paused");
     return;
   }
-  await fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`, {
+
+  const url = deviceId
+    ? `https://api.spotify.com/v1/me/player/pause?device_id=${deviceId}`
+    : `https://api.spotify.com/v1/me/player/pause`;
+
+  await fetch(url, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${accessToken}`
